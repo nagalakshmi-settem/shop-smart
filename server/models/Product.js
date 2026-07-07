@@ -12,4 +12,9 @@ const productSchema = new mongoose.Schema({
   description:   { type: String, default: "" },
 });
 
+productSchema.index({name:"text"});
+productSchema.index({category:1});
+productSchema.index({price:1});
+productSchema.index({rating:-1})
+
 module.exports = mongoose.model("Product", productSchema);

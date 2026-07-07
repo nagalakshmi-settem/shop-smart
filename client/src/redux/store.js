@@ -3,7 +3,7 @@ import cartReducer from "./cartSlice";
 import authReducer from "./authSlice";
 import wishlistReducer from "./wishlistSlice";
 
-const store = configureStore({
+export const store = configureStore({  // ← named export
   reducer: {
     cart: cartReducer,
     auth: authReducer,

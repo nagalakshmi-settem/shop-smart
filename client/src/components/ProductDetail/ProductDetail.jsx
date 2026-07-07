@@ -2,17 +2,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import useProduct from './useProduct';
 import useWishlist from '../../hooks/useWishlist';
 import useCart from '../../hooks/useCart';
+import ReviewSection from './ReviewSection';
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { product, loading, error } = useProduct(id);
 
-  // Cart — using useCart hook now
   const { addToCart, isInCart } = useCart();
   const inCart = isInCart(id);
 
-  // Wishlist
   const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
   const wishlisted = isWishlisted(id);
 
@@ -160,6 +159,10 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+
+        {/* Reviews Section ← added here */}
+        <ReviewSection productId={id} />
+
       </div>
     </div>
   );
