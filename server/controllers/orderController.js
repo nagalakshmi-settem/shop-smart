@@ -49,4 +49,30 @@ const getOrderStats = async (req, res) => {
   }
 };
 
-module.exports = { createOrder, getMyOrders ,getOrderStats};
+const getCategoryStats = async(req,res)=>{
+  try{
+    const stats = await Order.aggregate([
+      {$match:{user:new mongoose.Types.ObjectId(req.user.id)}},
+      {$unwind:"$items"},
+      {$lookup:{
+        from:"products",
+        localField: "items.product",
+        foreignField:"_id",
+        as:"productData"
+      }},
+      {$unwind:"$productData"},
+      {$group:{
+        _id:"$productData.category",
+        totalSpent: { $sum: "$items.price" },
+        totalItems:{$sum:1}
+      }},
+      {$sort:{totalSpent:-1}}
+    ])
+    res.status(200).json(stats)
+  }catch(err){
+    res.status(500).json({ message: "Internal Server Error" });
+
+  }
+}
+
+module.exports = { createOrder, getMyOrders ,getOrderStats,getCategoryStats};

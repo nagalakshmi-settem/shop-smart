@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import useProducts from './useProducts';
 import ProductCard from './ProductCard';
 
@@ -12,8 +12,18 @@ const categories = [
 ];
 
 export default function ProductList() {
-  const { products, loading, error, isPending } = useProducts();
+  const {
+    products,
+    loading,
+    error,
+    isPending,
+    loadingMore,    // NEW
+    hasNextPage,    // NEW
+    loadMore        // NEW
+  } = useProducts();
+
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const observerRef = useRef(null); // NEW
 
   const handleCategoryClick = useCallback((category) => {
     setSelectedCategory(prev => prev === category ? null : category);
@@ -22,6 +32,20 @@ export default function ProductList() {
   const filteredProducts = selectedCategory
     ? products.filter(p => p.category.toLowerCase() === selectedCategory.toLowerCase())
     : products;
+
+  // NEW — observer for last product
+  const lastProductRef = useCallback((node) => {
+    if (loadingMore) return;
+    if (observerRef.current) observerRef.current.disconnect();
+
+    observerRef.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasNextPage) {
+        loadMore();
+      }
+    });
+
+    if (node) observerRef.current.observe(node);
+  }, [loadingMore, hasNextPage, loadMore]);
 
   if (loading) return (
     <div className="flex justify-center items-center h-64">
@@ -101,9 +125,31 @@ export default function ProductList() {
         ) : (
           <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-px bg-gray-100
             ${isPending ? 'opacity-50' : 'opacity-100'} transition-opacity duration-300`}>
-            {filteredProducts.map(product => (
-              <ProductCard key={product._id} product={product} />
-            ))}
+            {filteredProducts.map((product, index) => {
+              // attach ref to last product to trigger loading more
+              if (index === filteredProducts.length - 1) {
+                return (
+                  <div ref={lastProductRef} key={product._id}>
+                    <ProductCard product={product} />
+                  </div>
+                );
+              }
+              return <ProductCard key={product._id} product={product} />;
+            })}
+          </div>
+        )}
+
+        {/* NEW — loading more indicator */}
+        {loadingMore && (
+          <div className="text-center py-4 text-gray-400 animate-pulse">
+            Loading more products...
+          </div>
+        )}
+
+        {/* NEW — end of results */}
+        {!hasNextPage && products.length > 0 && (
+          <div className="text-center py-4 text-gray-400 text-sm">
+            You've seen all products!
           </div>
         )}
       </div>

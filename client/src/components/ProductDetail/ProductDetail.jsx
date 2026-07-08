@@ -29,6 +29,13 @@ export default function ProductDetail() {
     }
   };
 
+  const handleBuyNow = () =>{
+    if(!inCart){
+      addToCart(id)
+    }
+    navigate("/cart")
+  }
+
   const discount = product?.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
@@ -92,7 +99,7 @@ export default function ProductDetail() {
               </button>
 
               <button
-                onClick={() => navigate('/cart')}
+                onClick={handleBuyNow}
                 className="flex-1 py-3 rounded font-semibold text-sm bg-[#2874f0] hover:bg-[#1a5dc7] text-white"
               >
                 Buy Now

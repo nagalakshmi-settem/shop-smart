@@ -1,7 +1,7 @@
 import useOrders from './useOrders';
 
 export default function MyOrders() {
-  const { orders, stats, loading, error } = useOrders();
+  const { orders, stats,categoryStats, loading, error } = useOrders();
 
   if (loading) return (
     <div className="flex justify-center items-center h-64">
@@ -48,6 +48,26 @@ export default function MyOrders() {
                 ₹{Math.round(stats.avgOrderValue)?.toLocaleString()}
               </p>
               <p className="text-xs text-gray-500 mt-1">Avg Order Value</p>
+            </div>
+          </div>
+        )}
+                {/* NEW — Category Breakdown Card */}
+        {categoryStats.length > 0 && (
+          <div className="bg-white rounded-lg p-4 mb-4">
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">
+              Spending by Category
+            </h2>
+            <div className="space-y-2">
+              {categoryStats.map(cat => (
+                <div key={cat._id} className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600 capitalize">
+                    {cat._id} ({cat.totalItems} {cat.totalItems === 1 ? 'item' : 'items'})
+                  </span>
+                  <span className="text-sm font-semibold text-gray-800">
+                    ₹{cat.totalSpent.toLocaleString()}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         )}

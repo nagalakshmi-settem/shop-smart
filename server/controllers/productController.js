@@ -11,8 +11,12 @@ const search = req.query.search?.trim() || "";
 const filter = search && search.length > 0
   ? { name: { $regex: search, $options: "i" } }
   : {};
-const products =  await Product.find(filter).skip(skip).limit(limit)  
-res.status(200).json(products)
+const products =  await Product.find(filter).skip(skip).limit(limit);
+const totalProducts = await Product.countDocuments(filter);
+const totalPages = Math.ceil(totalProducts / limit);
+const hasNextPage = page < totalPages;
+const hasPreviousPage = page > 1;
+res.status(200).json({products,currentPage:page,totalPages,totalProducts,hasNextPage,hasPreviousPage})
 }catch(err){
     console.log("err",err.message)
 res.status(500).json({message:"Internal Server Error"})
