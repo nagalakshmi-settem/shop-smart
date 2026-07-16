@@ -1,5 +1,6 @@
 const express = require("express")
 const cors = require('cors');
+const cookieParser = require('cookie-parser')
 const dotenv = require("dotenv")
 // const cluster = require("cluster");
 // const os = require("os");
@@ -24,8 +25,12 @@ dotenv.config();
 // }else{
 connectDB();
 const app = express();
-app.use(cors()); 
+app.use(cors({
+  origin:"http://localhost:5173",
+  credentials:true,
+})); 
 app.use(express.json());
+app.use(cookieParser());
 app.use("/products",productRoutes);
 app.use("/auth", authRoutes)
 app.use("/orders",orderRoutes);
