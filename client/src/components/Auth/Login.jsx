@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from "@react-oauth/google";
 import { useDispatch } from 'react-redux';
 import axiosInstance from '../../api/axiosInstance';
 import { loginSuccess } from '../../redux/authSlice';
+
 
 export default function Login() {
   const navigate = useNavigate();
@@ -27,6 +29,24 @@ setError(err.response?.data?.message || "Something went wrong");
 setLoading(false)
     }
   };
+
+  const handleGoogleSuccess = async(credentialResponse) =>{
+try{
+  const res = await axiosInstance.post("/auth/google",{
+    token:credentialResponse.credential,
+  })
+  dispatch(loginSuccess({token:res.data.token,user:res.data.user}));
+      navigate("/");
+
+}catch(err){
+console.log(err);
+setError(err.response?.data?.message || "Google login failed");
+}
+  }
+
+  const handleGoogleError = ()=>{
+    console.log("Google Login Failed")
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -68,14 +88,31 @@ onChange={handleChange}
             />
           </div>
 
-          <button
-            onClick={handleSubmit}
-disabled={loading}
-            className="w-full bg-[#2874f0] hover:bg-[#1a5dc7] text-white py-2.5 rounded font-medium text-sm disabled:opacity-50"
-          >
-{loading ? 'Logging in...' : 'Login'}
-          </button>
+          {/* Login Button */}
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="w-full bg-[#2874f0] hover:bg-[#1a5dc7] text-white py-2.5 rounded font-medium text-sm disabled:opacity-50"
+        >
+          {loading ? "Logging in..." : "Login"}
+        </button>
+
+        {/* Divider */}
+        <div className="flex items-center">
+          <hr className="flex-1 border-gray-300" />
+          <span className="mx-3 text-sm text-gray-500">OR</span>
+          <hr className="flex-1 border-gray-300" />
         </div>
+
+        {/* Google Login */}
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+          />
+        </div>
+      </div>
+
 
         <p className="text-center text-sm text-gray-500 mt-4">
           Don't have an account?{' '}

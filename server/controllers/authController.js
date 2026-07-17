@@ -1,6 +1,9 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const {OAuth2Client} = require("google-auth-library");
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 const register = async(req,res)=>{
     try{
 const {name,email,password} = req.body
@@ -32,9 +35,18 @@ res.cookie("refreshToken", refreshToken,{
     sameSite:"lax",
     maxAge:7*24*60*60*1000
 });
-res.json({accessToken,user:{id: user._id, name: user.name, email: user.email}})
+res.json({
+  token: accessToken,
+  user: {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+  },
+});
+
 }catch(err){
-    res.status(500).json({ message: "Internal Server Error" });
+    // res.status(500).json({ message: "Internal Server Error" });
+    next(err)
 
 }
 }
@@ -79,4 +91,56 @@ const accessToken = jwt.sign(
     });
   }
 };
-module.exports={register,login,refreshToken}
+
+const googleLogin = async(req,res) =>{
+  try{
+    const {token} = req.body;
+    const ticket = await client.verifyIdToken({
+      idToken:token,
+      audience:process.env.GOOGLE_CLIENT_ID,
+    })
+    const payload = ticket.getPayload();
+    const {email,name}= payload;
+    let user = await User.findOne({email})
+    if(!user){
+user = await User.create({
+        name,
+        email,
+        password: "",
+      });
+        }
+        const accessToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+
+    const refreshToken = jwt.sign(
+      { id: user._id },
+      process.env.REFRESH_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({
+      token: accessToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+  }catch(err){
+   console.error(err);
+    res.status(401).json({
+      message: "Google authentication failed",
+    });
+  }
+}
+module.exports={register,login,refreshToken,googleLogin}

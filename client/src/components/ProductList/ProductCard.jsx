@@ -4,7 +4,7 @@ const discount = (price, original) =>
   Math.round(((original - price) / original) * 100);
 
  const ProductCard = memo(function ProductCard({ product }){
-    console.log('ProductCard rendered:', product.name); // ← add this
+    // console.log('ProductCard rendered:', product.name); // ← add this
   return (
     <Link
       to={`/products/${product._id}`}
